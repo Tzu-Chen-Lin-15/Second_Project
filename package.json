@@ -1,0 +1,64 @@
+{
+  "name": "jetp02-prisma",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "tw": "tailwindcss -i ./src/css/app.css -o ./public/css/app.css --watch",
+    "dev": "concurrently \"npm run tw\" \"npm run dev2\"",
+    "dev2": "nodemon --exec tsx src/index.ts",
+    "dev3": "bun run --watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "prod": "pm2 start --interpreter ~/.bun/bin/bun src/index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://bitbucket.org/lsd0125/jetp02-prisma.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://bitbucket.org/lsd0125/jetp02-prisma/issues"
+  },
+  "homepage": "https://bitbucket.org/lsd0125/jetp02-prisma#readme",
+  "dependencies": {
+    "@prisma/client": "^6.14.0",
+    "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "express-session": "^1.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "moment": "^2.30.1",
+    "multer": "^2.0.2",
+    "prisma-extension-pagination": "^0.7.5",
+    "session-file-store": "^1.5.0",
+    "uuid": "^11.1.0",
+    "zod": "^4.0.17"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.1.12",
+    "@types/bcrypt": "^6.0.0",
+    "@types/cookie-parser": "^1.4.9",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/express-session": "^1.18.2",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.0.0",
+    "@types/node": "^24.3.0",
+    "@types/session-file-store": "^1.2.5",
+    "concurrently": "^9.2.0",
+    "daisyui": "^5.0.50",
+    "nodemon": "^3.1.10",
+    "prisma": "^6.14.0",
+    "tailwindcss": "^4.1.12",
+    "tsx": "^4.20.4",
+    "typescript": "^5.9.2"
+  }
+}

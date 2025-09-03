@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "nodenext",
+    // 目標 JavaScript 版本
+    // 模組系統
+    "moduleResolution": "nodenext", // 模組解析⽅式
+    "strict": true,
+    // 啟⽤嚴格型別檢查
+    "esModuleInterop": true,
+    // ⽀援 CommonJS 模組
+    "skipLibCheck": true,
+    // 忽略類型定義檔檢查
+    "outDir": "./dist",
+    // 編譯後的輸出目錄
+    "rootDir": "./src",
+    // 源始碼目錄
+    "verbatimModuleSyntax": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
+  },
+  "include": ["src/**/*"]
+}

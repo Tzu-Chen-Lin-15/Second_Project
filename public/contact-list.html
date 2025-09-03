@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <div id="myContent"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.1/moment.min.js"></script>
+    <script>
+      const myContent = document.querySelector("#myContent");
+      const usp = new URLSearchParams(location.search);
+
+      console.log({
+        page: usp.get("page"),
+        limit: usp.get("limit"),
+      });
+
+      function renderContent(result) {
+        const { data, meta } = result;
+
+        return `
+      <div class="row">
+        <div class="col">
+          <nav aria-label="Page navigation example">
+            <ul class="pagination">
+            ${Array(11)
+              .fill(1)
+              .map((v, i) => {
+                const page = meta.currentPage;
+                const p = page - 5 + i;
+                if (p < 1 || p > meta.pageCount) return "";
+
+                return `<li class="page-item ${p === page ? "active" : ""}">
+                <a class="page-link" href="?page=${p}">${p}</a>
+              </li>`;
+              })
+              .join("")}
+            </ul>
+          </nav>
+        </div>
+        </div>
+      <div class="row">
+        <div class="col">
+          <table class="table table-bordered table-striped">
+            <thead>
+              <tr>
+                <th>刪</th>
+                <th>#</th>
+                <th>姓名</th>
+                <th>手機</th>
+                <th>Email</th>
+                <th>生日</th>
+                <th>地址</th>
+                <th>建立時間</th>
+                <th>編輯</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data
+                .map((i) => {
+                  return `<tr>
+                  <th><a href="javascript: deleteItem(${i.ab_id})">刪</a></th>
+                  <td>${i.ab_id}</td>
+                  <td>${i.name}</td>
+                  <td>${i.mobile}</td>
+                  <td>${i.email}</td>
+                  <td>${i.birthday ? i.birthday.split("T")[0] : ""}</td>
+                  <td>${i.address}</td>
+                  <td>${moment(i.created_at).format("YYYY-MM-DD HH:mm:ss")}</td>
+                  <th><a href="contact-edit.html?ab_id=${i.ab_id}">編輯</a></th>
+                  </tr>`;
+                })
+                .join("")}
+            </tbody>
+          </table>
+        </div>
+      </div>
+        `;
+      }
+
+      fetch(`http://${location.hostname}:3007/api/contacts${location.search}`)
+        .then((r) => r.json())
+        .then((result) => {
+          console.log(result);
+          if (result.success) {
+            myContent.innerHTML = renderContent(result);
+          }
+        });
+
+      const deleteItem = (ab_id) => {
+        if (confirm(`是否要刪除編號為 ${ab_id} 的資料?`)) {
+          fetch(`http://${location.hostname}:3007/api/contacts/${ab_id}`, {
+            method: "DELETE",
+          })
+            .then((r) => r.json())
+            .then((result) => {
+              console.log(result);
+              location.reload(); // 重載頁面
+            });
+        }
+      };
+    </script>
+  </body>
+</html>
