@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { prisma } from "../utils/prisma.js"; // ESM 模式要有 .js 副檔名
+import { prisma } from "../utils/prisma.js";
 
 const router = Router();
 
