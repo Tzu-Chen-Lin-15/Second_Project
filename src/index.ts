@@ -1,117 +1,67 @@
-import express from "express";
-import type { Request, Response } from "express";
 import "dotenv/config";
-import usersRouter from "./routes/users.js";
-import tryABRouter from "./routes/try_ab.js";
-import apiContactsRouter from "./routes/api-contacts.js";
-import { z } from "zod";
-import session from "express-session";
-import sessionFileStore from "session-file-store";
+import express from "express";
 import cors from "cors";
-import upload from "./utils/upload-images.js"
 
-const FileStore = sessionFileStore(session);
+// 匯入路由與中介層（注意 ESM 要帶 .js）
+import authRouter from "./routes/auth.js";
+import hotelsRouter from "./routes/hotels.js";
+import bookingsRouter from "./routes/bookings.js";
+import adminRoomTypes from "./routes/admin.roomTypes.js";
+import { requireAuth, requireAdmin } from "./middlewares/auth.js";
 
 const app = express();
 
-// 設定使用 EJS 為樣版引擎
-app.set("view engine", "ejs");
-
-// 設定靜態內容資料夾
-app.use(express.static("public"));
-// 解析 JSON body 的中間件
+// 中介層：JSON / URL-encoded
 app.use(express.json());
-// 解析 URL-encoded body 的中間件
 app.use(express.urlencoded({ extended: true }));
-// app.use(cors()); // 最基本的設定方式, 誇來源時沒有要使用 cookie
 
+// CORS 設定（允許 Vite 前端）
 app.use(
   cors({
-    origin: function (origin: string | undefined, callback) {
-      // console.log({ origin });
-
-      if (!origin) {
-        callback(null, true); // 沒有 origin 檔頭時
-        return;
-      }
-      callback(null, true); // 所有都允許
-    },
+    origin: ["http://localhost:5173", "http://localhost:5174"], // 你的前端開發位址
     credentials: true,
   })
 );
 
+// 健康檢查
+app.get("/", (_req, res) => {
+  res.json({ ok: true, name: "booking-api", version: "1.0.0" });
+});
+
+// --- 路由掛載 ---
+
+// Auth（註冊/登入/取得自己）
+app.use("/api/auth", authRouter);
+
+// 前台 API
+app.use("/api/hotels", hotelsRouter);
+
+// 訂單 → 要登入才能使用
+app.use("/api/bookings", requireAuth, bookingsRouter);
+
+// 後台房型管理 → 要登入 + 管理員
+app.use("/api/admin/room-types", requireAuth, requireAdmin, adminRoomTypes);
+
+// 404 處理
+app.use((_req, res) => {
+  res.status(404).json({ message: "Not Found" });
+});
+
+// 統一錯誤處理
 app.use(
-  session({
-    resave: false,
-    saveUninitialized: false,
-    secret: "kfJKLK87896KHLK",
-    store: new FileStore({}),
-  })
+  (
+    err: any,
+    _req: express.Request,
+    res: express.Response,
+    _next: express.NextFunction
+  ) => {
+    console.error("Unhandled Error:", err);
+    res.status(500).json({ message: "Server Error" });
+  }
 );
 
-app.get("/", (req: Request, res: Response) => {
-  res.send("首頁");
-});
-
-app.use("/users", usersRouter);
-app.use("/try-ab", tryABRouter);
-app.use("/api/contacts", apiContactsRouter);
-
-// 測試 zod
-app.get("/zod1", (req: Request, res: Response) => {
-  const email = req.query.email;
-  // 規則
-  const emailSchema = z.string().email();
-  const result = emailSchema.safeParse(email);
-  res.json(result);
-});
-app.get("/zod2", (req: Request, res: Response) => {
-  const email = req.query.email;
-  const emailSchema = z.string().email();
-  try {
-    const result = emailSchema.parse(email);
-    res.json(result);
-  } catch (ex) {
-    res.json(ex);
-  }
-});
-app.get("/zod3", (req: Request, res: Response) => {
-  const { email, password } = req.query;
-
-  const loginSchema = z.object({
-    email: z
-      .string({ message: "請填寫Email" })
-      .email({ message: "請輸入正常的電子郵件格式" }),
-    password: z
-      .string({ message: "請填寫密碼" })
-      .min(6, { message: "密碼長度太短" }),
-  });
-
-  try {
-    const result = loginSchema.parse({ email, password });
-    res.json(result);
-  } catch (error) {
-    let details;
-    if (error instanceof z.ZodError) {
-      details = error.issues.map((err) => ({
-        field: err.path.join("."),
-        message: err.message,
-      }));
-    }
-    res.json({ success: false, errors: details });
-  }
-});
-app.get("/try-sess", (req: Request, res: Response) => {
-  (req.session as any).my_num = (req.session as any).my_num || 0;
-  (req.session as any).my_num++;
-  res.json(req.session);
-});
-
-app.post("/try-post", upload.none(), (req: Request, res: Response) => {
-  res.json(req.body);
-});
-
-const port = process.env.PORT || 3002;
-app.listen(port, () => {
-  console.log(`Express + TS 啟動 http://localhost:${port}`);
-});
+// 啟動伺服器
+const PORT = Number(process.env.PORT) || 3007;
+app.listen(PORT, () =>
+  console.log(`API server running at http://localhost:${PORT}`)
+);

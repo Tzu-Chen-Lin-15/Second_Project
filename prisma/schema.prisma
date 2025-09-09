@@ -15,74 +15,63 @@ datasource db {
 }
 
 model User {
-  id         Int      @id @default(autoincrement())
-  firstName  String   @map("first_name")
-  lastName   String   @map("last-name")
-  email      String   @unique
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-  posts      Post[]
-  hobbies    Hobby[]
-  profile    Profile?
-  password   String   @default("") @ignore
-
-  @@map("users")
+  id        Int       @id @default(autoincrement())
+  email     String    @unique
+  password  String
+  name      String?
+  phone     String?
+  bookings  Booking[]
+  createdAt DateTime  @default(now())
 }
 
-model Post {
+model Hotel {
+  id          Int          @id @default(autoincrement())
+  name        String
+  city        String
+  address     String
+  description String?
+  images      HotelImage[]
+  roomTypes   RoomType[]
+  createdAt   DateTime     @default(now())
+}
+
+model HotelImage {
   id        Int    @id @default(autoincrement())
-  content   String @db.Text
-  author_id Int
-  author    User   @relation(fields: [author_id], references: [id])
+  hotelId   Int
+  hotel     Hotel  @relation(fields: [hotelId], references: [id])
+  url       String
+  sortOrder Int    @default(1)
 }
 
-model Hobby {
-  id    Int    @id @default(autoincrement())
-  name  String
-  users User[]
+model RoomType {
+  id        Int       @id @default(autoincrement())
+  hotelId   Int
+  hotel     Hotel     @relation(fields: [hotelId], references: [id])
+  name      String
+  price     Int // 單位: 每晚金額
+  total     Int // 總間數
+  bookings  Booking[]
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
-model Profile {
-  id      Int  @id @default(autoincrement())
-  user_id Int  @unique
-  user    User @relation(fields: [user_id], references: [id])
+model Booking {
+  id           Int           @id @default(autoincrement())
+  userId       Int
+  user         User          @relation(fields: [userId], references: [id])
+  roomTypeId   Int
+  roomType     RoomType      @relation(fields: [roomTypeId], references: [id])
+  checkIn      DateTime
+  checkOut     DateTime
+  guests       Int
+  contactName  String
+  contactPhone String
+  status       BookingStatus @default(CONFIRMED)
+  createdAt    DateTime      @default(now())
 }
 
-model Member {
-  member_id     Int               @id @default(autoincrement())
-  email         String            @unique(map: "email")
-  password_hash String
-  mobile        String?
-  nickname      String
-  create_at     DateTime          @db.DateTime(0)
-  favorites     ContactFavorite[]
-
-  @@map("members")
-}
-
-model Contact {
-  ab_id      Int               @id @default(autoincrement())
-  name       String
-  email      String
-  mobile     String
-  birthday   DateTime?         @db.Date
-  address    String
-  created_at DateTime          @default(now()) @db.DateTime(0)
-  favorites  ContactFavorite[]
-
-  @@map("address_book")
-}
-
-model ContactFavorite {
-  like_id    Int      @id @default(autoincrement())
-  member_id  Int
-  ab_id      Int
-  created_at DateTime @default(now()) @db.DateTime(0)
-  member     Member   @relation(fields: [member_id], references: [member_id], onDelete: NoAction, onUpdate: NoAction, map: "ab_likes_ibfk_1")
-  contact    Contact  @relation(fields: [ab_id], references: [ab_id], onDelete: NoAction, onUpdate: NoAction, map: "ab_likes_ibfk_2")
-
-  @@unique([member_id, ab_id], map: "member_id_2")
-  @@index([ab_id], map: "ab_id")
-  @@index([member_id], map: "member_id")
-  @@map("ab_likes")
+enum BookingStatus {
+  CONFIRMED
+  CANCELLED
 }
