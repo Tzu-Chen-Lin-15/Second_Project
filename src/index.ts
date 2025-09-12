@@ -1,6 +1,7 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
+import path from "path";
 
 // 匯入路由與中介層（注意 ESM 要帶 .js）
 import authRouter from "./routes/auth.js";
@@ -14,6 +15,8 @@ const app = express();
 // 中介層：JSON / URL-encoded
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+app.use(express.static(path.resolve(process.cwd(), "public")));
 
 // CORS 設定（允許 Vite 前端）
 app.use(
