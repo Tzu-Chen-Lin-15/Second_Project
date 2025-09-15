@@ -20,7 +20,7 @@ router.get("/", async (req, res) => {
     //新增:where條件
     const where: any = {};
     if (city) {
-      where.city = city;
+      where.city = { contains: city };
     }
 
     const hotels = await prisma.hotel.findMany({

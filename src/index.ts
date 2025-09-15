@@ -3,7 +3,6 @@ import express from "express";
 import cors from "cors";
 import path from "path";
 
-// 匯入路由與中介層（注意 ESM 要帶 .js）
 import authRouter from "./routes/auth.js";
 import hotelsRouter from "./routes/hotels.js";
 import bookingsRouter from "./routes/bookings.js";
@@ -16,15 +15,20 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use(express.static(path.resolve(process.cwd(), "public")));
+// CORS：開發全放行；上線再改白名單
+if (process.env.NODE_ENV !== "production") {
+  app.use(cors({ origin: true, credentials: true }));
+} else {
+  app.use(
+    cors({
+      origin: ["http://localhost:5173"], // TODO: 正式網域
+      credentials: true,
+    })
+  );
+}
 
-// CORS 設定（允許 Vite 前端）
-app.use(
-  cors({
-    origin: ["http://localhost:5173", "http://localhost:5174"], // 你的前端開發位址
-    credentials: true,
-  })
-);
+// 提供整個 /public 為靜態目錄
+app.use(express.static(path.resolve(process.cwd(), "public")));
 
 // 健康檢查
 app.get("/", (_req, res) => {
@@ -59,12 +63,22 @@ app.use(
     _next: express.NextFunction
   ) => {
     console.error("Unhandled Error:", err);
-    res.status(500).json({ message: "Server Error" });
+
+    if (process.env.NODE_ENV === "production") {
+      return res.status(500).json({ message: "Server Error" });
+    }
+
+    // 開發模式：回傳詳細錯誤，方便 debug
+    res.status(500).json({
+      message: "Server Error",
+      error: String(err?.message ?? err),
+      stack: err?.stack,
+    });
   }
 );
 
 // 啟動伺服器
 const PORT = Number(process.env.PORT) || 3007;
-app.listen(PORT, () =>
-  console.log(`API server running at http://localhost:${PORT}`)
+app.listen(PORT, "0.0.0.0", () =>
+  console.log(`API server running at http://0.0.0.0:${PORT}`)
 );
